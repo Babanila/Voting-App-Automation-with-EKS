@@ -13,10 +13,15 @@ WORKDIR /usr/local/app
 COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Set environment variables for Redis configuration (can be overridden at runtime)
+ENV REDIS_HOST=redis
+ENV REDIS_PORT=6379
+
 # dev defines a stage for development, where it'll watch for filesystem changes
 FROM base AS dev
 RUN pip install watchdog
 ENV FLASK_ENV=development
+
 CMD ["python", "app.py"]
 
 # final defines the stage that will bundle the application for production
