@@ -96,8 +96,8 @@ You can build each service with Docker and run them individually:
 
 - **Vote (Python)**:
   ```bash
-  docker build -t myorg/vote:latest ./vote
-  docker run --name vote -p 8080:80 myorg/vote:latest
+  docker build -t babanila/vote:2.0 ./services/vote
+  docker run --name vote -p 8080:80 babanila/vote:2.0
   ```
   Visit [http://localhost:8080](http://localhost:8080).
 
@@ -108,8 +108,8 @@ You can build each service with Docker and run them individually:
 
 - **Worker (.NET)**:
   ```bash
-  docker build -t myorg/worker:latest ./worker
-  docker run --name worker myorg/worker:latest
+  docker build -t babanila/worker:2.0 ./services/worker
+  docker run --name worker babanila/worker:2.0
   ```
   
 - **Postgres**:
@@ -119,8 +119,8 @@ You can build each service with Docker and run them individually:
 
 - **Result (Node.js)**:
   ```bash
-  docker build -t myorg/result:latest ./result
-  docker run --name result -p 8081:80 myorg/result:latest
+  docker build -t babanila/result:2.0 ./services/result
+  docker run --name result -p 8081:80 babanila/result:2.0
   ```
   Visit [http://localhost:8081](http://localhost:8081).
 
@@ -142,12 +142,17 @@ Visit [http://localhost:8080](http://localhost:8080) to vote and [http://localho
 
 ---
 
+## Build using Docker Compose and Docker Hub Image
+```bash
+docker compose -f second-docker-compose.yml up --build
+```
+
 ## Notes on Platforms (arm64 vs amd64)
 
 If you’re on an arm64 machine (e.g., Apple Silicon M1/M2) and encounter issues with images or dependencies that assume amd64, you can use Docker `buildx`:
 
 ```bash
-docker buildx build --platform linux/amd64 -t myorg/worker:latest ./worker
+docker buildx build --platform linux/amd64 -t babanila/worker:2.0 ./worker
 ```
 
 This ensures the image is built for the desired platform.

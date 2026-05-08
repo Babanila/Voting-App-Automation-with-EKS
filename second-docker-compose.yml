@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   vote:
-    build: 
-      context: ./services/vote
-      target: dev
+    image: babanila/vote:2.0
     depends_on:
       redis:
         condition: service_healthy
@@ -23,8 +21,7 @@ services:
       - back-tier
 
   result:
-    build: ./services/result
-    entrypoint: nodemon --inspect=0.0.0.0 server.js
+    image: babanila/result:2.0
     depends_on:
       db:
         condition: service_healthy 
@@ -38,9 +35,7 @@ services:
       - back-tier
 
   worker:
-    build: 
-      context: ./services/worker
-      dockerfile: Dockerfile
+    image: babanila/worker:2.0
     depends_on:
       redis:
         condition: service_healthy 
