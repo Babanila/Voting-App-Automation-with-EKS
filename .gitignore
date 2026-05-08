@@ -5,3 +5,44 @@ obj/
 .vs/
 .DS_STORE
 node_modules/
+
+!*.env.example
+example*
+
+# SSH Keys (SSH & Ansible Authentication)
+*.pem
+*.key
+
+# System files
+.DS_Store
+*.DS_Store
+
+# Local provider/module cache & backend config
+.terraform/
+**/.terraform/*
+
+*.lock.hcl
+!.terraform.lock.hcl
+
+# State files (contain sensitive data & are environment-specific)
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Variable files (often contain secrets or env-specific values)
+*.tfvars
+*.tfvars.json
+!*.example.tfvars
+!*.example.tfvars.json
+
+# Saved plan files (binary, ephemeral)
+*.tfplan
+
+
+# Local overrides (used for temporary debugging/testing)
+*_override.tf
+*_override.tf.json
+
+# CLI config (user/machine-specific)
+.terraformrc
+terraform.rc
