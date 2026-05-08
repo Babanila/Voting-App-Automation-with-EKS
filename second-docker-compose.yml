@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  vote:
+    image: babanila/vote:2.0
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck: 
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - ./services/vote:/usr/local/app
+    ports:
+      - "8080:80"
+    networks:
+      - front-tier
+      - back-tier
+
+  result:
+    image: babanila/result:2.0
+    depends_on:
+      db:
+        condition: service_healthy 
+    volumes:
+      - ./services/result:/usr/local/app
+    ports:
+      - "8081:80"
+      - "127.0.0.1:9229:9229"
+    networks:
+      - front-tier
+      - back-tier
+
+  worker:
+    image: babanila/worker:2.0
+    depends_on:
+      redis:
+        condition: service_healthy 
+      db:
+        condition: service_healthy 
+    environment:
+      - DB_HOST=db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=postgres
+      - REDIS_HOST=redis
+    networks:
+      - back-tier
+
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - "./scripts/healthchecks:/healthchecks"
+    healthcheck:
+      test: ["CMD", "redis-cli", "PING"]
+      interval: "5s"
+      timeout: "5s"
+      retries: 3
+    networks:
+      - back-tier
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    volumes:
+      - "db-data:/var/lib/postgresql/data"
+      - "./scripts/healthchecks:/healthchecks"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: "5s"
+      timeout: "5s"
+      retries: 5
+    networks:
+      - back-tier
+
+volumes:
+  db-data:
+
+networks:
+  front-tier:
+  back-tier:

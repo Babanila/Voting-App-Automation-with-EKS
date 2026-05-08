@@ -142,12 +142,17 @@ Visit [http://localhost:8080](http://localhost:8080) to vote and [http://localho
 
 ---
 
+## Build using Docker Compose and Docker Hub Image
+```bash
+docker compose -f second-docker-compose.yml up --build
+```
+
 ## Notes on Platforms (arm64 vs amd64)
 
 If you’re on an arm64 machine (e.g., Apple Silicon M1/M2) and encounter issues with images or dependencies that assume amd64, you can use Docker `buildx`:
 
 ```bash
-docker buildx build --platform linux/amd64 -t myorg/worker:latest ./worker
+docker buildx build --platform linux/amd64 -t babanila/worker:2.0 ./worker
 ```
 
 This ensures the image is built for the desired platform.
