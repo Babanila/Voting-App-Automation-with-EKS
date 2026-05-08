@@ -3,4 +3,5 @@ project.lock.json
 bin/
 obj/
 .vs/
+.DS_STORE
 node_modules/
