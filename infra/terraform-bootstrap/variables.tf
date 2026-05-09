@@ -12,12 +12,12 @@ variable "aws_region" {
   type        = string
 }
 
-variable "author_name" {
+variable "name" {
   type        = string
   description = "Used for naming resources"
 
   validation {
-    condition     = can(regex("^[a-z0-9-]+$", lower(var.author_name)))
-    error_message = "author_name must contain only lowercase letters, numbers, and hyphens."
+    condition     = can(regex("^[a-z0-9-]+$", lower(var.name)))
+    error_message = "name must contain only lowercase letters, numbers, and hyphens."
   }
 }
