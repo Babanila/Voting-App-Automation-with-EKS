@@ -14,11 +14,6 @@ output "vpc_cidr_block" {
   value       = aws_vpc.this.cidr_block
 }
 
-output "vpc_secondary_cidr_blocks" {
-  description = "List of secondary CIDR blocks of the VPC"
-  value       = aws_vpc.this.secondary_cidr_blocks
-}
-
 output "vpc_main_route_table_id" {
   description = "ID of the main route table"
   value       = aws_vpc.this.main_route_table_id
