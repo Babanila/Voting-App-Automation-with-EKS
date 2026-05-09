@@ -3,9 +3,11 @@ project.lock.json
 bin/
 obj/
 .vs/
+.vscode/
 .DS_STORE
 node_modules/
 
+.env
 !*.env.example
 example*
 
