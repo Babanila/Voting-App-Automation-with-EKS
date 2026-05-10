@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: babs-app
+  labels:
+    app: babs
+    managed-by: kubectl
