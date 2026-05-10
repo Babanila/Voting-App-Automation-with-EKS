@@ -37,7 +37,7 @@ output "web_sg_id" {
 
 
 ## Application Server Security Group
-module "app_sg" {
+module "web_sg" {
   source = "./modules/security-group"
 
   name        = "app-server-sg"
@@ -50,7 +50,7 @@ module "app_sg" {
       from_port      = 8080
       to_port        = 8080
       protocol       = "tcp"
-      security_groups = [module.web_sg.security_group_id]
+      source_security_group_id = module.web_sg.security_group_id
     },
     {
       description = "SSH from bastion"
@@ -82,14 +82,14 @@ module "db_sg" {
       from_port      = 5432
       to_port        = 5432
       protocol       = "tcp"
-      security_groups = [module.app_sg.security_group_id]
+      source_security_group_id = module.web_sg.security_group_id
     },
     {
       description    = "MySQL from app tier"
       from_port      = 3306
       to_port        = 3306
       protocol       = "tcp"
-      security_groups = [module.app_sg.security_group_id]
+      source_security_group_id = module.web_sg.security_group_id
     }
   ]
 
@@ -177,14 +177,14 @@ module "eks_nodes_sg" {
       from_port      = 1025
       to_port        = 65535
       protocol       = "tcp"
-      security_groups = [module.eks_cluster_sg.security_group_id]
+      source_security_group_id = module.eks_cluster_sg.security_group_id
     },
     {
       description    = "HTTPS from cluster"
       from_port      = 443
       to_port        = 443
       protocol       = "tcp"
-      security_groups = [module.eks_cluster_sg.security_group_id]
+      source_security_group_id = module.eks_cluster_sg.security_group_id
     },
     {
       description = "Node to node communication"
@@ -234,7 +234,7 @@ module "alb_sg" {
       from_port      = 8080
       to_port        = 8080
       protocol       = "tcp"
-      security_groups = [module.app_sg.security_group_id]
+      source_security_group_id = module.web_sg.security_group_id
     }
   ]
 
@@ -260,7 +260,7 @@ module "redis_sg" {
       from_port      = 6379
       to_port        = 6379
       protocol       = "tcp"
-      security_groups = [module.app_sg.security_group_id]
+      source_security_group_id = module.web_sg.security_group_id
     }
   ]
 
@@ -287,14 +287,14 @@ module "mq_sg" {
       from_port      = 5671
       to_port        = 5672
       protocol       = "tcp"
-      security_groups = [module.app_sg.security_group_id]
+      source_security_group_id = module.web_sg.security_group_id
     },
     {
       description    = "Management from bastion"
       from_port      = 5672
       to_port        = 5672
       protocol       = "tcp"
-      security_groups = [module.bastion_sg.security_group_id]
+      source_security_group_id = module.bastion_sg.security_group_id
     }
   ]
 

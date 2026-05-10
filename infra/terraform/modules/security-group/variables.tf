@@ -31,33 +31,32 @@ variable "name_prefix" {
 variable "ingress_rules" {
   description = "List of ingress rules"
   type = list(object({
-    description       = optional(string, "")
-    from_port         = number
-    to_port           = number
-    protocol          = string
-    cidr_blocks       = optional(list(string), [])
-    ipv6_cidr_blocks  = optional(list(string), [])
-    security_groups   = optional(list(string), [])
-    self              = optional(bool, false)
-    prefix_list_ids   = optional(list(string), [])
+    description              = optional(string, "")
+    from_port                = number
+    to_port                  = number
+    protocol                 = string
+    cidr_blocks              = optional(list(string), [])
+    ipv6_cidr_blocks         = optional(list(string), [])
+    source_security_group_id = optional(string, "")  # Changed from security_groups
+    self                     = optional(bool, false)
+    prefix_list_ids          = optional(list(string), [])
   }))
   default = []
 }
-
 
 # Egress Rules
 variable "egress_rules" {
   description = "List of egress rules"
   type = list(object({
-    description       = optional(string, "")
-    from_port         = number
-    to_port           = number
-    protocol          = string
-    cidr_blocks       = optional(list(string), [])
-    ipv6_cidr_blocks  = optional(list(string), [])
-    security_groups   = optional(list(string), [])
-    self              = optional(bool, false)
-    prefix_list_ids   = optional(list(string), [])
+    description              = optional(string, "")
+    from_port                = number
+    to_port                  = number
+    protocol                 = string
+    cidr_blocks              = optional(list(string), [])
+    ipv6_cidr_blocks         = optional(list(string), [])
+    source_security_group_id = optional(string, "")
+    self                     = optional(bool, false)
+    prefix_list_ids          = optional(list(string), [])
   }))
   default = []
 }
