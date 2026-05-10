@@ -191,7 +191,7 @@ variable "enable_envelope_encryption" {
 }
 
 variable "kms_key_arn" {
-  description = "ARN of the KMS key for envelope encryption (optional, will create if not provided)"
+  description = "ARN of the KMS key for envelope encryption (optional)"
   type        = string
   default     = ""
 }

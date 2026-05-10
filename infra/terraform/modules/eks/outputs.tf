@@ -92,3 +92,13 @@ output "oidc_provider_url" {
   description = "URL of the OIDC provider"
   value       = length(aws_iam_openid_connect_provider.eks) > 0 ? replace(aws_iam_openid_connect_provider.eks[0].url, "https://", "") : ""
 }
+
+output "kms_key_arn" {
+  description = "ARN of the KMS key used for encryption"
+  value       = var.enable_envelope_encryption ? (var.kms_key_arn != "" ? var.kms_key_arn : aws_kms_key.eks[0].arn) : ""
+}
+
+output "kms_key_id" {
+  description = "ID of the KMS key used for encryption"
+  value       = var.enable_envelope_encryption && var.kms_key_arn == "" ? aws_kms_key.eks[0].key_id : ""
+}
