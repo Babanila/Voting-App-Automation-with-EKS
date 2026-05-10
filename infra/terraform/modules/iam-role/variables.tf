@@ -26,7 +26,7 @@ variable "path" {
 variable "trusted_entities" {
   description = "List of trusted entities (AWS services, accounts, or ARNs)"
   type = list(object({
-    type        = string                 # "service", "account", "arn", "federated"
+    type        = string # "service", "account", "arn", "federated"
     identifiers = list(string)
     condition = optional(list(object({
       test     = string

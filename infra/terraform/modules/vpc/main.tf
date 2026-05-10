@@ -34,9 +34,9 @@ resource "aws_vpc_ipv4_cidr_block_association" "secondary" {
 resource "aws_vpc_dhcp_options" "this" {
   count = var.enable_dhcp_options ? 1 : 0
 
-  domain_name          = var.dhcp_options_domain_name != "" ? var.dhcp_options_domain_name : null
-  domain_name_servers  = var.dhcp_options_domain_name_servers
-  ntp_servers          = length(var.dhcp_options_ntp_servers) > 0 ? var.dhcp_options_ntp_servers : null
+  domain_name         = var.dhcp_options_domain_name != "" ? var.dhcp_options_domain_name : null
+  domain_name_servers = var.dhcp_options_domain_name_servers
+  ntp_servers         = length(var.dhcp_options_ntp_servers) > 0 ? var.dhcp_options_ntp_servers : null
 
   tags = merge(var.tags, {
     Name = "${var.name}-dhcp-options"
@@ -54,9 +54,9 @@ resource "aws_vpc_dhcp_options_association" "this" {
 locals {
   azs = length(var.azs) > 0 ? var.azs : slice(data.aws_availability_zones.available.names, 0, 3)
 
-  num_public_subnets   = length(var.public_subnet_cidrs)
-  num_private_subnets  = length(var.private_subnet_cidrs)
-  num_database_subnets = length(var.database_subnet_cidrs)
+  num_public_subnets      = length(var.public_subnet_cidrs)
+  num_private_subnets     = length(var.private_subnet_cidrs)
+  num_database_subnets    = length(var.database_subnet_cidrs)
   num_elasticache_subnets = length(var.elasticache_subnet_cidrs)
 
   # NAT Gateway count

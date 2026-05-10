@@ -84,7 +84,7 @@ resource "aws_iam_openid_connect_provider" "eks" {
 
 # Local Values for Role ARNs
 locals {
-  cluster_role_arn = var.cluster_role_arn != "" ? var.cluster_role_arn : module.cluster_role[0].role_arn
-  node_role_arn    = var.node_role_arn != "" ? var.node_role_arn : module.node_role[0].role_arn
+  cluster_role_arn           = var.cluster_role_arn != "" ? var.cluster_role_arn : module.cluster_role[0].role_arn
+  node_role_arn              = var.node_role_arn != "" ? var.node_role_arn : module.node_role[0].role_arn
   node_instance_profile_name = var.node_role_arn != "" ? "" : module.node_role[0].instance_profile_name
 }

@@ -42,8 +42,8 @@ resource "aws_security_group" "node" {
   vpc_id      = var.vpc_id
 
   tags = merge(var.tags, {
-    Name                                          = "${var.cluster_name}-node-sg"
-    "kubernetes.io/cluster/${var.cluster_name}"    = "owned"
+    Name                                        = "${var.cluster_name}-node-sg"
+    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
   })
 
   lifecycle {

@@ -68,9 +68,9 @@ output "node_groups" {
   description = "Map of node group attributes"
   value = {
     for k, v in aws_eks_node_group.this : k => {
-      arn           = v.arn
-      status        = v.status
-      capacity_type = v.capacity_type
+      arn            = v.arn
+      status         = v.status
+      capacity_type  = v.capacity_type
       scaling_config = v.scaling_config
     }
   }

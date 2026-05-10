@@ -1,10 +1,10 @@
 # IAM Role
 resource "aws_iam_role" "this" {
-  name                  = var.name
-  description           = var.description
-  path                  = var.path
-  max_session_duration  = var.max_session_duration
-  assume_role_policy    = local.assume_role_policy
+  name                 = var.name
+  description          = var.description
+  path                 = var.path
+  max_session_duration = var.max_session_duration
+  assume_role_policy   = local.assume_role_policy
 
   permissions_boundary = var.permissions_boundary_arn != "" ? var.permissions_boundary_arn : null
 

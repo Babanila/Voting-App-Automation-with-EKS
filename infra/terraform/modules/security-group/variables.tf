@@ -37,7 +37,7 @@ variable "ingress_rules" {
     protocol                 = string
     cidr_blocks              = optional(list(string), [])
     ipv6_cidr_blocks         = optional(list(string), [])
-    source_security_group_id = optional(string, "")  # Changed from security_groups
+    source_security_group_id = optional(string, "") # Changed from security_groups
     self                     = optional(bool, false)
     prefix_list_ids          = optional(list(string), [])
   }))

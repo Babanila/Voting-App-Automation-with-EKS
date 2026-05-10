@@ -121,7 +121,7 @@ variable "node_policy_arns" {
 variable "enable_cluster_addons" {
   description = "Map of EKS add-ons to enable"
   type = map(object({
-    version                  = optional(string, null)
+    version                     = optional(string, null)
     resolve_conflicts_on_create = optional(string, "OVERWRITE")
     resolve_conflicts_on_update = optional(string, "OVERWRITE")
   }))

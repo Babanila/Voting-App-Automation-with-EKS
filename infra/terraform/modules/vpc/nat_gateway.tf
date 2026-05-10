@@ -50,7 +50,7 @@ resource "aws_route" "private_nat" {
 resource "aws_route_table_association" "private" {
   count = local.num_private_subnets
 
-  subnet_id      = aws_subnet.private[count.index].id
+  subnet_id = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private[
     var.single_nat_gateway ? 0 : count.index % local.nat_gateway_count
   ].id
@@ -80,7 +80,7 @@ resource "aws_route" "database_nat" {
 resource "aws_route_table_association" "database" {
   count = local.num_database_subnets > 0 && local.nat_gateway_count > 0 ? local.num_database_subnets : 0
 
-  subnet_id      = aws_subnet.database[count.index].id
+  subnet_id = aws_subnet.database[count.index].id
   route_table_id = aws_route_table.database[
     var.single_nat_gateway ? 0 : count.index % local.nat_gateway_count
   ].id
