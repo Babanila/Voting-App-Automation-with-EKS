@@ -27,6 +27,7 @@ example*
 !.terraform.lock.hcl
 
 # State files (contain sensitive data & are environment-specific)
+tfplan
 *.tfstate
 *.tfstate.*
 *.tfstate.backup
@@ -48,3 +49,6 @@ example*
 # CLI config (user/machine-specific)
 .terraformrc
 terraform.rc
+
+# Logs
+*.log
