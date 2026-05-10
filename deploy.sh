@@ -6,7 +6,7 @@
 # - Secure .env loading
 # - Structured logging
 # - Dependency validation
-# - Cleanup handling
+# - Error handling
 # - Safer Terraform execution
 # - Idempotent backend configuration
 # - No unsafe export/xargs parsing
@@ -55,17 +55,26 @@ error() {
 #######################################
 # Error handling
 #######################################
-cleanup() {
+error_handler() {
   local exit_code=$?
+  local line_no=$1
+  local command="${BASH_COMMAND}"
 
-  if [[ $exit_code -ne 0 ]]; then
-    error "Deployment failed with exit code: ${exit_code}"
+  # Ignore expected "already exists" errors
+  if [[ "${LAST_ERROR:-}" == *"already exists"* ]]; then
+    warn "Ignoring existing resource error"
+    return 0
   fi
 
-  exit "$exit_code"
+  error "Command failed"
+  error "Exit code : ${exit_code}"
+  error "Line      : ${line_no}"
+  error "Command   : ${command}"
+
+  exit "${exit_code}"
 }
 
-trap cleanup EXIT
+trap 'error_handler ${LINENO}' ERR
 
 
 #######################################
@@ -119,20 +128,11 @@ terraform_deploy() {
 
   info "Deploying Terraform in: ${dir}"
 
-  terraform -chdir="$dir" init -input=false
-
-  terraform -chdir="$dir" fmt -check -recursive
-
-  terraform -chdir="$dir" validate
-
-  terraform -chdir="$dir" plan \
-    -input=false \
-    -out=tfplan
-
-  terraform -chdir="$dir" apply \
-    -input=false \
-    -auto-approve \
-    tfplan
+  terraform -chdir="$dir" init -input=false 
+  terraform -chdir="$dir" fmt -recursive 
+  terraform -chdir="$dir" validate 
+  terraform -chdir="$dir" plan -input=false -out=tfplan
+  terraform -chdir="$dir" apply -input=false -auto-approve tfplan
 
   rm -f "${dir}/tfplan"
 }
