@@ -51,11 +51,3 @@ output "policy_arns" {
     for k, v in aws_iam_policy.this : k => v.arn
   }
 }
-
-output "attached_policy_arns" {
-  description = "List of all attached managed policy ARNs"
-  value = concat(
-    var.managed_policy_arns,
-    [for k, v in aws_iam_policy.this : v.arn if var.policies[k].attach]
-  )
-}

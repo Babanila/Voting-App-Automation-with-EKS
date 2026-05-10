@@ -17,31 +17,52 @@ resource "aws_iam_role" "this" {
 
 # Assume Role Policy
 locals {
+  # Use custom policy if provided, otherwise generate from trusted entities
   assume_role_policy = var.assume_role_policy != "" ? var.assume_role_policy : data.aws_iam_policy_document.assume_role.json
 }
 
 data "aws_iam_policy_document" "assume_role" {
+  # Service principals
   dynamic "statement" {
-    for_each = var.trusted_entities
+    for_each = length(var.trusted_services) > 0 ? [1] : []
 
     content {
-      effect = "Allow"
-
-      principals {
-        type        = statement.value.type
-        identifiers = statement.value.identifiers
-      }
-
+      effect  = "Allow"
       actions = ["sts:AssumeRole"]
 
-      dynamic "condition" {
-        for_each = statement.value.condition
+      principals {
+        type        = "Service"
+        identifiers = var.trusted_services
+      }
+    }
+  }
 
-        content {
-          test     = condition.value.test
-          variable = condition.value.variable
-          values   = condition.value.values
-        }
+  # ARN principals
+  dynamic "statement" {
+    for_each = length(var.trusted_arns) > 0 ? [1] : []
+
+    content {
+      effect  = "Allow"
+      actions = ["sts:AssumeRole"]
+
+      principals {
+        type        = "AWS"
+        identifiers = var.trusted_arns
+      }
+    }
+  }
+
+  # Account principals
+  dynamic "statement" {
+    for_each = length(var.trusted_accounts) > 0 ? [1] : []
+
+    content {
+      effect  = "Allow"
+      actions = ["sts:AssumeRole"]
+
+      principals {
+        type        = "AWS"
+        identifiers = [for account in var.trusted_accounts : "arn:aws:iam::${account}:root"]
       }
     }
   }
@@ -67,7 +88,21 @@ resource "aws_iam_role_policy" "inline" {
 }
 
 
-# Created Policies Attachment
+# Created Policies
+resource "aws_iam_policy" "this" {
+  for_each = var.policies
+
+  name        = each.key
+  description = each.value.description
+  path        = each.value.path
+  policy      = each.value.policy
+
+  tags = merge(var.tags, {
+    Name      = each.key
+    ManagedBy = "terraform"
+  })
+}
+
 resource "aws_iam_role_policy_attachment" "created" {
   for_each = {
     for k, v in var.policies : k => v
