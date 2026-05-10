@@ -19,6 +19,10 @@ example*
 .DS_Store
 *.DS_Store
 
+# Generated files that contains .env parameters
+backend.json
+backend.tf
+
 # Local provider/module cache & backend config
 .terraform/
 **/.terraform/*
@@ -27,7 +31,6 @@ example*
 !.terraform.lock.hcl
 
 # State files (contain sensitive data & are environment-specific)
-tfplan
 *.tfstate
 *.tfstate.*
 *.tfstate.backup
@@ -39,6 +42,7 @@ tfplan
 !*.example.tfvars.json
 
 # Saved plan files (binary, ephemeral)
+tfplan
 *.tfplan
 
 
