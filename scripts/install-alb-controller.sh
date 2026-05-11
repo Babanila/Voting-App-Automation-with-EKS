@@ -17,9 +17,14 @@ ROLE_NAME="${ROLE_NAME:-AmazonEKSLoadBalancerControllerRole-${MY_NAME}}"
 POLICY_NAME="${POLICY_NAME:-AWSLoadBalancerControllerIAMPolicy-${MY_NAME}}"
 ADDITIONAL_POLICY_NAME="${ADDITIONAL_POLICY_NAME:-AWSLoadBalancerControllerAdditionalPermissions-${MY_NAME}}"
 
+
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CACHE_DIR="${CACHE_DIR:-$SCRIPT_DIR/.cache}"
-POLICY_FILE="$CACHE_DIR/iam_policy.json"
+
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+INFRA_DIR="${ROOT_DIR}/infra"
+POLICIES_DIR="${POLICIES_DIR:-$INFRA_DIR/policies}"
+POLICY_FILE="$POLICIES_DIR/iam_policy.json"
 
 POLICY_URL="${POLICY_URL:-https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.8.2/docs/install/iam_policy.json}"
 
@@ -70,7 +75,7 @@ update_kubeconfig() {
 }
 
 ensure_cache_dir() {
-  mkdir -p "$CACHE_DIR"
+  mkdir -p "$POLICIES_DIR"
 }
 
 ensure_policy_file() {
