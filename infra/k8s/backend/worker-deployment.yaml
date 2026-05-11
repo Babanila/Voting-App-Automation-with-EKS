@@ -27,7 +27,7 @@ spec:
             - name: REDIS_HOST
               value: "redis"
             - name: DB_HOST
-              value: "postgres"
+              value: "db"
             - name: DB_USERNAME
               value: "postgres"
             - name: DB_PASSWORD
