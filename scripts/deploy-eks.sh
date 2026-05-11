@@ -24,11 +24,9 @@ K8S_DIR="${ROOT_DIR}/infra/k8s"
 TERRAFORM_DIR="${ROOT_DIR}/infra/terraform"
 
 
-AWS_REGION="us-east-1"
-NAMESPACE="babs-app"
-NAME="babajide"
-
-
+#######################################
+# Add Load balancer
+#######################################
 ensure_alb_controller() {
   if kubectl get deployment -n kube-system aws-load-balancer-controller >/dev/null 2>&1; then
     info "AWS Load Balancer Controller already exists, skipping install"
@@ -43,16 +41,38 @@ ensure_alb_controller() {
   fi
 }
 
+#######################################
+# Secure .env loading
+#######################################
+load_env() {
+  local env_file="${ROOT_DIR}/.env"
+
+  if [[ ! -f "$env_file" ]]; then
+    warn ".env file not found. Continuing with existing environment variables."
+    return
+  fi
+
+  info "Loading environment variables from .env"
+
+  set -a
+  # shellcheck disable=SC1090
+  source "$env_file"
+  set +a
+
+  info "Environment variables loaded..."
+}
+
 
 # ============================================
 # Set Cluster & Update kubeconfig
 # ============================================
+load_env
+
 info "Getting and Setting cluster name..."
 CLUSTER_NAME=$(aws eks list-clusters --query "clusters[?contains(@, 'babajide')]" --output text)
 
 info "Updating kubeconfig..."
 aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
-
 
 # ============================================
 # Step 1: Create Namespace
@@ -67,6 +87,7 @@ kubectl config set-context --current --namespace=$NAMESPACE
 info "Step 2: Deploying Database tier (Postgres)..."
 
 kubectl apply -f "${K8S_DIR}/database/postgres-secret.yaml"
+kubectl apply -f "${K8S_DIR}/database/pvc.yaml"
 kubectl apply -f "${K8S_DIR}/database/postgres-deployment.yaml"
 kubectl apply -f "${K8S_DIR}/database/postgres-service.yaml"
 
@@ -111,19 +132,11 @@ kubectl rollout status deployment/result -n "$NAMESPACE" --timeout=120s
 success "Frontend tier deployed!"
 
 # ============================================
-# Step 5: Deploy Load Balancer
-# ============================================
-info "Step 5: Setting up Load Balancer..."
-ensure_alb_controller
-
-success "Load Balancer Configured!"
-
-# ============================================
-# Step 6: Deploy Ingress
+# Step 5: Deploy Ingress
 # ============================================
 if [[ -f "${K8S_DIR}/ingress.yaml" ]]; then
-  info "Step 6: Deploying Ingress..."
-  kubectl apply -f "${K8S_DIR}/ingress.yaml"
+  info "Step 5: Deploying Ingress..."
+  kubectl apply -n $NAMESPACE -f "${K8S_DIR}/ingress.yaml"
   success "Ingress deployed!"
 fi
 
@@ -153,8 +166,8 @@ kubectl get ingress -n "$NAMESPACE" 2>/dev/null || echo "No ingress configured"
 ALB_HOST=$(kubectl get ingress voting-app-ingress -n "$NAMESPACE" -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "")
 if [[ -n "$ALB_HOST" ]]; then
   echo ""
-  echo "🌍 Vote URL: http://$ALB_HOST (or vote.babs.ironlabs.online)"
-  echo "🌍 Result URL: http://result.babs.ironlabs.online"
+  echo "🌍 Vote URL: http://$ALB_HOST/vote (or vote.babs.ironlabs.online)"
+  echo "🌍 Result URL: http://$ALB_HOST/result (or result.babs.ironlabs.online)"
 fi
 
 # NodePort access (if Minikube or without ALB)
