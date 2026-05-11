@@ -7,7 +7,7 @@ metadata:
     app: result
     tier: frontend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: result
@@ -24,39 +24,25 @@ spec:
     spec:
       containers:
         - name: result
-          image: babanila/result:2.0
+          image: babanila/result:3.0
           imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 80
               protocol: TCP
           env:
-            - name: POSTGRES_HOST
-              value: "postgres"
-            - name: POSTGRES_PORT
+            - name: PORT
+              value: "80"
+            - name: PG_HOST
+              value: "db"
+            - name: PG_PORT
               value: "5432"
-            - name: POSTGRES_DB
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-secret
-                  key: database_name
-            - name: POSTGRES_USER
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-secret
-                  key: database_user
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-secret
-                  key: database_password
-          resources:
-            requests:
-              cpu: 50m
-              memory: 64Mi
-            limits:
-              cpu: 100m
-              memory: 128Mi
+            - name: PG_USER
+              value: "postgres"
+            - name: PG_PASSWORD
+              value: "postgres"
+            - name: PG_DATABASE
+              value: "postgres"
           livenessProbe:
             httpGet:
               path: /

@@ -1,16 +1,16 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: result-service
+  name: result
   namespace: babs-app
   labels:
-    app: result-service
+    app: result
 spec:
   type: ClusterIP
   selector:
     app: result
   ports:
     - name: http
-      protocol: TCP
       port: 80
       targetPort: 80
+      protocol: TCP
