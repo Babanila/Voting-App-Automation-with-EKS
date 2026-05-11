@@ -15,7 +15,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: vote-service
+                name: vote
                 port:
                   number: 80
     - host: result.babs.ironlabs.online
@@ -25,6 +25,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: result-service
+                name: result
                 port:
                   number: 80
