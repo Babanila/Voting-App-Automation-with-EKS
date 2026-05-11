@@ -28,12 +28,21 @@ spec:
               value: "redis"
             - name: DB_HOST
               value: "db"
-            - name: DB_USERNAME
-              value: "postgres"
-            - name: DB_PASSWORD
-              value: "postgres"
             - name: DB_NAME
-              value: "postgres"
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_DB
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
           resources:
             requests:
               cpu: 100m

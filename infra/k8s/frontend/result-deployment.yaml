@@ -37,12 +37,21 @@ spec:
               value: "db"
             - name: PG_PORT
               value: "5432"
-            - name: PG_USER
-              value: "postgres"
-            - name: PG_PASSWORD
-              value: "postgres"
             - name: PG_DATABASE
-              value: "postgres"
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_DB
+            - name: PG_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
           livenessProbe:
             httpGet:
               path: /
