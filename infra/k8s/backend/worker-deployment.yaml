@@ -7,15 +7,12 @@ metadata:
     app: worker
     tier: backend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: worker
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+    type: Recreate
   template:
     metadata:
       labels:
@@ -24,32 +21,19 @@ spec:
     spec:
       containers:
         - name: worker
-          image: babanila/worker:2.0
+          image: babanila/worker:3.0
           imagePullPolicy: Always
           env:
             - name: REDIS_HOST
               value: "redis"
-            - name: REDIS_PORT
-              value: "6379"
-            - name: PGHOST
+            - name: DB_HOST
               value: "postgres"
-            - name: PGPORT
-              value: "5432"
-            - name: PGDATABASE
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-secret
-                  key: database_name
-            - name: PGUSER
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-secret
-                  key: database_user
-            - name: PGPASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-secret
-                  key: database_password
+            - name: DB_USERNAME
+              value: "postgres"
+            - name: DB_PASSWORD
+              value: "postgres"
+            - name: DB_NAME
+              value: "postgres"
           resources:
             requests:
               cpu: 100m
