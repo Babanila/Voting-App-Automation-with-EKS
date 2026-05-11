@@ -3,9 +3,6 @@ kind: Deployment
 metadata:
   name: postgres
   namespace: babs-app
-  labels:
-    app: postgres
-    tier: database
 spec:
   replicas: 1
   selector:
@@ -17,15 +14,12 @@ spec:
     metadata:
       labels:
         app: postgres
-        tier: database
     spec:
       containers:
         - name: postgres
           image: postgres:15-alpine
           ports:
-            - name: postgres
-              containerPort: 5432
-              protocol: TCP
+            - containerPort: 5432
           env:
             - name: POSTGRES_DB
               valueFrom:
@@ -44,27 +38,10 @@ spec:
                   key: database_password
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
-          resources:
-            requests:
-              cpu: 250m
-              memory: 256Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
-          livenessProbe:
-            exec:
-              command: ["pg_isready", "-U", "postgres"]
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-          readinessProbe:
-            exec:
-              command: ["pg_isready", "-U", "postgres"]
-            initialDelaySeconds: 5
-            periodSeconds: 5
       volumes:
         - name: postgres-data
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: postgres-pvc
