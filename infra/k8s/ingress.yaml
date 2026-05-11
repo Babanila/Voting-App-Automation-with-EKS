@@ -4,27 +4,21 @@ metadata:
   name: voting-app-ingress
   namespace: babs-app
   annotations:
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
-  ingressClassName: alb
+  ingressClassName: nginx
   rules:
-    - host: vote.babs.ironlabs.online
-      http:
+    - http:
         paths:
-          - path: /
-            pathType: Prefix
+          - path: /vote(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: vote
                 port:
                   number: 80
-    - host: result.babs.ironlabs.online
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
+          - path: /result(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: result
