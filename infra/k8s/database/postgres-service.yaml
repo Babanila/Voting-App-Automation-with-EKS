@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres
+  name: postgres-service
   namespace: babs-app
   labels:
-    app: postgres
+    app: postgres-service
 spec:
   selector:
     app: postgres
