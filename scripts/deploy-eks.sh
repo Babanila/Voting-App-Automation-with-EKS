@@ -166,13 +166,11 @@ kubectl get ingress -n "$NAMESPACE" 2>/dev/null || echo "No ingress configured"
 ALB_HOST=$(kubectl get ingress voting-app-ingress -n "$NAMESPACE" -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "")
 if [[ -n "$ALB_HOST" ]]; then
   echo ""
-  echo "🌍 Vote URL: http://$ALB_HOST/vote (or vote.babs.ironlabs.online)"
-  echo "🌍 Result URL: http://$ALB_HOST/result (or result.babs.ironlabs.online)"
+  echo "🌍 Vote URL: http://$ALB_HOST/vote (or http://vote.babs.ironlabs.online)"
+  echo "🌍 Result URL: http://$ALB_HOST/result (or http://result.babs.ironlabs.online)"
 fi
 
-# NodePort access (if Minikube or without ALB)
-echo ""
-echo "📍 NodePort Access (if using Minikube):"
-MINIKUBE_IP=$(minikube ip 2>/dev/null || echo "<MINIKUBE_IP>")
-echo "   Vote:   http://$MINIKUBE_IP:30080"
-echo "   Result: http://$MINIKUBE_IP:30081"
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🚀🚀🚀 --->  Done!  ----> 🚀🚀🚀"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
