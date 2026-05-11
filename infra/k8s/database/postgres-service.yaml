@@ -1,7 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres
+  # The name is hardcoded (fixed) in server.js in result image
+  name: db
+  namespace: babs-app
 spec:
   selector:
     app: postgres
