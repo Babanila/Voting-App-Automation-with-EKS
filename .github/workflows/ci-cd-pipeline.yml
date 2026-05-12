@@ -7,8 +7,9 @@ on:
   workflow_dispatch:
 
 env:
-  AWS_REGION: ${{ secrets.AWS_REGION }}
-  K8S_NAMESPACE: ${{ secrets.K8S_NAMESPACE }}
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
+  K8S_NAMESPACE: ${{ vars.K8S_NAMESPACE }}
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
@@ -21,18 +22,18 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-      
+
       - name: Set AWS account and ECR registry
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           echo "ACCOUNT_ID=$ACCOUNT_ID" >> $GITHUB_ENV
           echo "ECR_REGISTRY=$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com" >> $GITHUB_ENV
-      
+
       - name: Ensure ECR repositories exist
         run: |
           for repo in vote result worker; do
@@ -48,12 +49,11 @@ jobs:
           done
 
       - name: Login to Amazon ECR
-        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
+
       - name: Build and push vote image
         uses: docker/build-push-action@v5
         with:
@@ -83,8 +83,9 @@ jobs:
           tags: |
             ${{ env.ECR_REGISTRY }}/worker:${{ env.IMAGE_TAG }}
             ${{ env.ECR_REGISTRY }}/worker:latest
-      
+
   deploy:
+    name: Deploy to EKS
     runs-on: ubuntu-latest
     needs: build-and-push
 
@@ -109,7 +110,7 @@ jobs:
         run: |
           aws eks update-kubeconfig \
             --region "${AWS_REGION}" \
-            --name ${{ secrets.EKS_CLUSTER_NAME }}
+            --name "${EKS_CLUSTER_NAME}"
 
       - name: Create namespace if missing
         run: |
@@ -117,8 +118,7 @@ jobs:
 
       - name: Replace Docker Hub images with ECR images in manifests
         run: |
-          # Adjust these patterns if your manifests use different image names/tags
-          find infra/k8s -type f \( -name "*.yaml" -o -name "*.yml" ) -print0 | xargs -0 sed -i -E \
+          find infra/k8s -type f \( -name "*.yaml" -o -name "*.yml" \) -print0 | xargs -0 sed -i -E \
             -e "s|babanila/vote:[^[:space:]\"]+|${ECR_REGISTRY}/vote:${IMAGE_TAG}|g" \
             -e "s|babanila/result:[^[:space:]\"]+|${ECR_REGISTRY}/result:${IMAGE_TAG}|g" \
             -e "s|babanila/worker:[^[:space:]\"]+|${ECR_REGISTRY}/worker:${IMAGE_TAG}|g"
@@ -147,7 +147,3 @@ jobs:
           echo ""
           echo "Ingress:"
           kubectl get ingress -n "${K8S_NAMESPACE}" || true
-
-            
-
-      
