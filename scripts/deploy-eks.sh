@@ -78,7 +78,7 @@ aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
 # Step 1: Create Namespace
 # ============================================
 info "Step 1: Creating namespace..."
-kubectl apply -f "${K8S_DIR}/namespace.yaml"
+envsubst < "${K8S_DIR}/namespace.yaml" | kubectl apply -f -
 kubectl config set-context --current --namespace=$NAMESPACE
 
 # ============================================
@@ -136,7 +136,7 @@ success "Frontend tier deployed!"
 # ============================================
 if [[ -f "${K8S_DIR}/ingress.yaml" ]]; then
   info "Step 5: Deploying Ingress..."
-  kubectl apply -n $NAMESPACE -f "${K8S_DIR}/ingress.yaml" -n "$NAMESPACE"
+  kubectl apply -n $NAMESPACE -f "${K8S_DIR}/ingress.yaml"
   success "Ingress deployed!"
 fi
 

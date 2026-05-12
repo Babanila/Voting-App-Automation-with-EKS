@@ -31,7 +31,7 @@ on:
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
-  K8S_NAMESPACE: ${{ vars.K8S_NAMESPACE }}-${{ github.event.inputs.environment || 'dev' }}
+  NAMESPACE: ${{ vars.K8S_NAMESPACE }}-${{ github.event.inputs.environment || 'dev' }}
   IMAGE_TAG: ${{ github.sha }}
 
   ENVIRONMENT: ${{ github.event.inputs.environment || 'dev' }}
@@ -142,7 +142,7 @@ jobs:
 
       - name: Create namespace if missing
         run: |
-          kubectl create namespace "${K8S_NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create namespace "${NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Replace Docker Hub images with ECR images in manifests
         run: |
@@ -157,21 +157,21 @@ jobs:
 
       - name: Wait for core deployments
         run: |
-          kubectl rollout status deployment/postgres -n "${K8S_NAMESPACE}" --timeout=300s
-          kubectl rollout status deployment/redis -n "${K8S_NAMESPACE}" --timeout=300s
-          kubectl rollout status deployment/worker -n "${K8S_NAMESPACE}" --timeout=300s
-          kubectl rollout status deployment/vote -n "${K8S_NAMESPACE}" --timeout=300s
-          kubectl rollout status deployment/result -n "${K8S_NAMESPACE}" --timeout=300s
+          kubectl rollout status deployment/postgres -n "${NAMESPACE}" --timeout=300s
+          kubectl rollout status deployment/redis -n "${NAMESPACE}" --timeout=300s
+          kubectl rollout status deployment/worker -n "${NAMESPACE}" --timeout=300s
+          kubectl rollout status deployment/vote -n "${NAMESPACE}" --timeout=300s
+          kubectl rollout status deployment/result -n "${NAMESPACE}" --timeout=300s
 
       - name: Show status
         run: |
           echo "Pods:"
-          kubectl get pods -n "${K8S_NAMESPACE}" -o wide
+          kubectl get pods -n "${NAMESPACE}" -o wide
 
           echo ""
           echo "Services:"
-          kubectl get svc -n "${K8S_NAMESPACE}"
+          kubectl get svc -n "${NAMESPACE}"
 
           echo ""
           echo "Ingress:"
-          kubectl get ingress -n "${K8S_NAMESPACE}" || true
+          kubectl get ingress -n "${NAMESPACE}" || true
