@@ -2,10 +2,6 @@ name: Deploy to EKS
 
 on:
   workflow_call:
-    workflows:
-      - Push Images to ECR
-    types:
-      - completed
 
   workflow_dispatch:
     inputs:
