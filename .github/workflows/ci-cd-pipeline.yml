@@ -5,14 +5,36 @@ on:
     branches:
       - main
       - dev
+
   pull_request:
-    types: [opened, reopened, ready_for_review]
+    branches:
+      - main
+      - dev
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deployment environment"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
   K8S_NAMESPACE: ${{ vars.K8S_NAMESPACE }}
   IMAGE_TAG: ${{ github.sha }}
+
+  ENVIRONMENT: ${{ github.event.inputs.environment || 'dev' }}
 
 jobs:
   build-and-push:
@@ -92,6 +114,10 @@ jobs:
     needs: build-and-push
 
     steps:
+      - name: Environment to Deploy
+        run: | 
+          echo "Deploying to ${ENVIRONMENT}"
+
       - name: Checkout code
         uses: actions/checkout@v4
 
