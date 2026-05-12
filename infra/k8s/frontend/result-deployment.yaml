@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: result
-  namespace: babs-app
   labels:
     app: result
     tier: frontend
