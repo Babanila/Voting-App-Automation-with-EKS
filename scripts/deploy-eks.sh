@@ -78,7 +78,7 @@ aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
 # Step 1: Create Namespace
 # ============================================
 info "Step 1: Creating namespace..."
-kubectl apply -f "${K8S_DIR}/namespace.yaml"
+envsubst < "${K8S_DIR}/namespace.yaml" | kubectl apply -f -
 kubectl config set-context --current --namespace=$NAMESPACE
 
 # ============================================
@@ -86,10 +86,10 @@ kubectl config set-context --current --namespace=$NAMESPACE
 # ============================================
 info "Step 2: Deploying Database tier (Postgres)..."
 
-kubectl apply -f "${K8S_DIR}/database/postgres-secret.yaml"
-kubectl apply -f "${K8S_DIR}/database/pvc.yaml"
-kubectl apply -f "${K8S_DIR}/database/postgres-deployment.yaml"
-kubectl apply -f "${K8S_DIR}/database/postgres-service.yaml"
+kubectl apply -f "${K8S_DIR}/database/postgres-secret.yaml" -n "$NAMESPACE"
+kubectl apply -f "${K8S_DIR}/database/pvc.yaml" -n "$NAMESPACE"
+kubectl apply -f "${K8S_DIR}/database/postgres-deployment.yaml" -n "$NAMESPACE"
+kubectl apply -f "${K8S_DIR}/database/postgres-service.yaml" -n "$NAMESPACE"
 
 info "Waiting for Postgres to be ready..."
 kubectl rollout status deployment/postgres -n "$NAMESPACE" --timeout=120s
@@ -101,9 +101,9 @@ success "Database tier deployed!"
 # ============================================
 info "Step 3: Deploying Backend tier (Redis + Worker)..."
 
-kubectl apply -f "${K8S_DIR}/backend/redis-deployment.yaml"
-kubectl apply -f "${K8S_DIR}/backend/redis-service.yaml"
-kubectl apply -f "${K8S_DIR}/backend/worker-deployment.yaml"
+kubectl apply -f "${K8S_DIR}/backend/redis-deployment.yaml" -n "$NAMESPACE"
+kubectl apply -f "${K8S_DIR}/backend/redis-service.yaml" -n "$NAMESPACE"
+kubectl apply -f "${K8S_DIR}/backend/worker-deployment.yaml" -n "$NAMESPACE"
 
 info "Waiting for Redis to be ready..."
 kubectl rollout status deployment/redis -n "$NAMESPACE" --timeout=120s
@@ -118,16 +118,16 @@ success "Backend tier deployed!"
 # ============================================
 info "Step 4: Deploying Frontend tier (Vote + Result)..."
 
-kubectl apply -f "${K8S_DIR}/frontend/vote-deployment.yaml"
-kubectl apply -f "${K8S_DIR}/frontend/vote-service.yaml"
-kubectl apply -f "${K8S_DIR}/frontend/result-deployment.yaml"
-kubectl apply -f "${K8S_DIR}/frontend/result-service.yaml"
+kubectl apply -f "${K8S_DIR}/frontend/vote-deployment.yaml" -n "$NAMESPACE"
+kubectl apply -f "${K8S_DIR}/frontend/vote-service.yaml" -n "$NAMESPACE"
+kubectl apply -f "${K8S_DIR}/frontend/result-deployment.yaml" -n "$NAMESPACE"
+kubectl apply -f "${K8S_DIR}/frontend/result-service.yaml" -n "$NAMESPACE"
 
 info "Waiting for Vote to be ready..."
-kubectl rollout status deployment/vote -n "$NAMESPACE" --timeout=120s
+kubectl rollout status deployment/vote -n "$NAMESPACE" --timeout=300s
 
 info "Waiting for Result to be ready..."
-kubectl rollout status deployment/result -n "$NAMESPACE" --timeout=120s
+kubectl rollout status deployment/result -n "$NAMESPACE" --timeout=300s
 
 success "Frontend tier deployed!"
 
