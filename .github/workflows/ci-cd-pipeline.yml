@@ -1,0 +1,153 @@
+name: Build and Deploy to EKS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  K8S_NAMESPACE: ${{ secrets.K8S_NAMESPACE }}
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  build-and-push:
+    name: Build & Push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Set AWS account and ECR registry
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "ACCOUNT_ID=$ACCOUNT_ID" >> $GITHUB_ENV
+          echo "ECR_REGISTRY=$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com" >> $GITHUB_ENV
+      
+      - name: Ensure ECR repositories exist
+        run: |
+          for repo in vote result worker; do
+            if aws ecr describe-repositories --repository-names "$repo" >/dev/null 2>&1; then
+              echo "ECR repository exists: $repo"
+            else
+              echo "Creating ECR repository: $repo"
+              aws ecr create-repository \
+                --repository-name "$repo" \
+                --image-scanning-configuration scanOnPush=true \
+                --encryption-configuration encryptionType=AES256
+            fi
+          done
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build and push vote image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/vote
+          file: ./services/vote/Dockerfile
+          push: true
+          tags: |
+            ${{ env.ECR_REGISTRY }}/vote:${{ env.IMAGE_TAG }}
+            ${{ env.ECR_REGISTRY }}/vote:latest
+
+      - name: Build and push result image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/result
+          file: ./services/result/Dockerfile
+          push: true
+          tags: |
+            ${{ env.ECR_REGISTRY }}/result:${{ env.IMAGE_TAG }}
+            ${{ env.ECR_REGISTRY }}/result:latest
+
+      - name: Build and push worker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/worker
+          file: ./services/worker/Dockerfile
+          push: true
+          tags: |
+            ${{ env.ECR_REGISTRY }}/worker:${{ env.IMAGE_TAG }}
+            ${{ env.ECR_REGISTRY }}/worker:latest
+      
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set AWS account and ECR registry
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "ACCOUNT_ID=$ACCOUNT_ID" >> $GITHUB_ENV
+          echo "ECR_REGISTRY=$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com" >> $GITHUB_ENV
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region "${AWS_REGION}" \
+            --name ${{ secrets.EKS_CLUSTER_NAME }}
+
+      - name: Create namespace if missing
+        run: |
+          kubectl create namespace "${K8S_NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Replace Docker Hub images with ECR images in manifests
+        run: |
+          # Adjust these patterns if your manifests use different image names/tags
+          find infra/k8s -type f \( -name "*.yaml" -o -name "*.yml" ) -print0 | xargs -0 sed -i -E \
+            -e "s|babanila/vote:[^[:space:]\"]+|${ECR_REGISTRY}/vote:${IMAGE_TAG}|g" \
+            -e "s|babanila/result:[^[:space:]\"]+|${ECR_REGISTRY}/result:${IMAGE_TAG}|g" \
+            -e "s|babanila/worker:[^[:space:]\"]+|${ECR_REGISTRY}/worker:${IMAGE_TAG}|g"
+
+      - name: Apply Kubernetes manifests
+        run: |
+          kubectl apply -R -f infra/k8s
+
+      - name: Wait for core deployments
+        run: |
+          kubectl rollout status deployment/postgres -n "${K8S_NAMESPACE}" --timeout=300s
+          kubectl rollout status deployment/redis -n "${K8S_NAMESPACE}" --timeout=300s
+          kubectl rollout status deployment/worker -n "${K8S_NAMESPACE}" --timeout=300s
+          kubectl rollout status deployment/vote -n "${K8S_NAMESPACE}" --timeout=300s
+          kubectl rollout status deployment/result -n "${K8S_NAMESPACE}" --timeout=300s
+
+      - name: Show status
+        run: |
+          echo "Pods:"
+          kubectl get pods -n "${K8S_NAMESPACE}" -o wide
+
+          echo ""
+          echo "Services:"
+          kubectl get svc -n "${K8S_NAMESPACE}"
+
+          echo ""
+          echo "Ingress:"
+          kubectl get ingress -n "${K8S_NAMESPACE}" || true
+
+            
+
+      
