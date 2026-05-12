@@ -31,7 +31,7 @@ on:
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
-  K8S_NAMESPACE: ${{ vars.K8S_NAMESPACE }}
+  K8S_NAMESPACE: ${{ vars.K8S_NAMESPACE }}-${{ github.event.inputs.environment || 'dev' }}
   IMAGE_TAG: ${{ github.sha }}
 
   ENVIRONMENT: ${{ github.event.inputs.environment || 'dev' }}
