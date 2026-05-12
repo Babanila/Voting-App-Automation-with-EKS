@@ -78,7 +78,7 @@ aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
 # Step 1: Create Namespace
 # ============================================
 info "Step 1: Creating namespace..."
-kubectl apply -f "${K8S_DIR}/namespace.yaml"
+envsubst < "${K8S_DIR}/namespace.yaml" | kubectl apply -f -
 kubectl config set-context --current --namespace=$NAMESPACE
 
 # ============================================
@@ -124,10 +124,10 @@ kubectl apply -f "${K8S_DIR}/frontend/result-deployment.yaml"
 kubectl apply -f "${K8S_DIR}/frontend/result-service.yaml"
 
 info "Waiting for Vote to be ready..."
-kubectl rollout status deployment/vote -n "$NAMESPACE" --timeout=120s
+kubectl rollout status deployment/vote -n "$NAMESPACE" --timeout=300s
 
 info "Waiting for Result to be ready..."
-kubectl rollout status deployment/result -n "$NAMESPACE" --timeout=120s
+kubectl rollout status deployment/result -n "$NAMESPACE" --timeout=300s
 
 success "Frontend tier deployed!"
 

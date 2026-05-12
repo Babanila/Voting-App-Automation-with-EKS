@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis
-  namespace: babs-app
+  namespace: ${NAMESPACE}
   labels:
     app: redis
     tier: backend

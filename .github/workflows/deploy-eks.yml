@@ -1,0 +1,103 @@
+name: Deploy to EKS
+
+on:
+  workflow_call:
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deployment environment"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
+  NAMESPACE: ${{ vars.K8S_NAMESPACE }}-${{ inputs.environment || 'dev' }}
+  DNS_EXTENSION_PATH: ${{ vars.DNS_EXTENSION_PATH }}
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set AWS account and ECR registry
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "ECR_REGISTRY=$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com" >> $GITHUB_ENV
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region "${AWS_REGION}" \
+            --name "${EKS_CLUSTER_NAME}"
+
+      - name: Create namespace if missing
+        run: |
+          kubectl create namespace "${NAMESPACE}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Replace image references
+        run: |
+          find infra/k8s -type f \( -name "*.yaml" -o -name "*.yml" \) -print0 | xargs -0 sed -i -E \
+            -e "s|babanila/vote:[^[:space:]\"]+|${ECR_REGISTRY}/vote:${IMAGE_TAG}|g" \
+            -e "s|babanila/result:[^[:space:]\"]+|${ECR_REGISTRY}/result:${IMAGE_TAG}|g" \
+            -e "s|babanila/worker:[^[:space:]\"]+|${ECR_REGISTRY}/worker:${IMAGE_TAG}|g"
+
+      - name: Validate required environment variables
+        run: |
+          test -n "${NAMESPACE}"
+          test -n "${DNS_EXTENSION_PATH}"
+          test -n "${AWS_REGION}"
+
+      - name: Render and apply Kubernetes manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TMP_DIR="$(mktemp -d)"
+          trap 'rm -rf "$TMP_DIR"' EXIT
+
+          echo "Rendering manifests into: $TMP_DIR"
+
+          while IFS= read -r -d '' file; do
+            rel_path="${file#infra/k8s/}"
+            out_file="$TMP_DIR/$rel_path"
+
+            mkdir -p "$(dirname "$out_file")"
+
+            envsubst '${AWS_REGION} ${EKS_CLUSTER_NAME} ${NAMESPACE} ${ECR_REGISTRY} ${IMAGE_TAG} ${DNS_EXTENSION_PATH}' \
+              < "$file" > "$out_file"
+          done < <(find infra/k8s -type f \( -name "*.yaml" -o -name "*.yml" \) -print0)
+
+          echo "Applying rendered manifests..."
+          kubectl apply -R -f "$TMP_DIR"
+
+      - name: Wait for deployments
+        run: |
+          kubectl rollout status deployment/postgres -n "${NAMESPACE}" --timeout=300s
+          kubectl rollout status deployment/redis -n "${NAMESPACE}" --timeout=300s
+          kubectl rollout status deployment/vote -n "${NAMESPACE}" --timeout=300s
+          kubectl rollout status deployment/result -n "${NAMESPACE}" --timeout=300s
+          kubectl rollout status deployment/worker -n "${NAMESPACE}" --timeout=300s
+
+      - name: Show cluster status
+        run: |
+          kubectl get all -n "${NAMESPACE}"

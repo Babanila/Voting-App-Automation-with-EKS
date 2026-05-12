@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: result
-  namespace: babs-app
+  namespace: ${NAMESPACE}
   labels:
     app: result
 spec:

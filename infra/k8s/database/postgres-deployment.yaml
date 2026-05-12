@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres
-  namespace: babs-app
+  namespace: ${NAMESPACE}
 spec:
   replicas: 1
   selector:
