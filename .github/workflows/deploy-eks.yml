@@ -2,10 +2,6 @@ name: Deploy to EKS
 
 on:
   workflow_call:
-    workflows:
-      - Push Images to ECR
-    types:
-      - completed
 
   workflow_dispatch:
     inputs:
@@ -22,11 +18,8 @@ on:
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
-
-  NAMESPACE: ${{ vars.K8S_NAMESPACE }}-${{ github.event.inputs.environment || 'dev' }}
-
+  NAMESPACE: ${{ vars.K8S_NAMESPACE }}-${{ inputs.environment || 'dev' }}
   DNS_EXTENSION_PATH: ${{ vars.DNS_EXTENSION_PATH }}
-
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
@@ -68,16 +61,34 @@ jobs:
             -e "s|babanila/result:[^[:space:]\"]+|${ECR_REGISTRY}/result:${IMAGE_TAG}|g" \
             -e "s|babanila/worker:[^[:space:]\"]+|${ECR_REGISTRY}/worker:${IMAGE_TAG}|g"
 
-      - name: Apply Kubernetes manifests
+      - name: Validate required environment variables
+        run: |
+          test -n "${NAMESPACE}"
+          test -n "${DNS_EXTENSION_PATH}"
+          test -n "${AWS_REGION}"
+
+      - name: Render and apply Kubernetes manifests
         shell: bash
         run: |
           set -euo pipefail
 
+          TMP_DIR="$(mktemp -d)"
+          trap 'rm -rf "$TMP_DIR"' EXIT
+
+          echo "Rendering manifests into: $TMP_DIR"
+
           while IFS= read -r -d '' file; do
-            echo "Applying: $file"
-            envsubst '${AWS_REGION} ${EKS_CLUSTER_NAME} ${K8S_NAMESPACE} ${ECR_REGISTRY} ${IMAGE_TAG}' \
-              < "$file" | kubectl apply -f -
+            rel_path="${file#infra/k8s/}"
+            out_file="$TMP_DIR/$rel_path"
+
+            mkdir -p "$(dirname "$out_file")"
+
+            envsubst '${AWS_REGION} ${EKS_CLUSTER_NAME} ${NAMESPACE} ${ECR_REGISTRY} ${IMAGE_TAG} ${DNS_EXTENSION_PATH}' \
+              < "$file" > "$out_file"
           done < <(find infra/k8s -type f \( -name "*.yaml" -o -name "*.yml" \) -print0)
+
+          echo "Applying rendered manifests..."
+          kubectl apply -R -f "$TMP_DIR"
 
       - name: Wait for deployments
         run: |

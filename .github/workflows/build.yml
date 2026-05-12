@@ -2,10 +2,6 @@ name: Build Docker Images
 
 on:
   workflow_call:
-    workflows:
-      - Push Images to ECR
-    types:
-      - completed
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}

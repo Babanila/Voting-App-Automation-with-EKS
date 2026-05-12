@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: worker
+  namespace: ${NAMESPACE}
   labels:
     app: worker
     tier: backend
