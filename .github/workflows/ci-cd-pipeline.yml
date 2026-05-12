@@ -152,9 +152,17 @@ jobs:
             -e "s|babanila/result:[^[:space:]\"]+|${ECR_REGISTRY}/result:${IMAGE_TAG}|g" \
             -e "s|babanila/worker:[^[:space:]\"]+|${ECR_REGISTRY}/worker:${IMAGE_TAG}|g"
 
+      - name: Validate required environment variables
+        run: |
+          test -n "${NAMESPACE}"
+          test -n "${DNS_EXTENSION_PATH}"
+          test -n "${AWS_REGION}"
+
       - name: Apply Kubernetes manifests
         run: |
-          kubectl apply -R -f infra/k8s
+          find infra/k8s \
+            -type f \( -name "*.yaml" -o -name "*.yml" \) \
+            -exec sh -c 'envsubst < "$1" | kubectl apply -f -' _ {} \;
 
       - name: Wait for core deployments
         run: |
