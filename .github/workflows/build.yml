@@ -1,15 +1,11 @@
 name: Build Docker Images
 
 on:
-  pull_request:
-    branches:
-      - main
-      - dev
-
-  push:
-    branches:
-      - main
-      - dev
+  workflow_call:
+    workflows:
+      - Push Images to ECR
+    types:
+      - completed
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}

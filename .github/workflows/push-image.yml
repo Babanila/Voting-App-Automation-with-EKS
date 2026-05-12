@@ -1,13 +1,11 @@
 name: Push Images to ECR
 
 on:
-  workflow_run:
+  workflow_call:
     workflows:
       - Build Docker Images
     types:
       - completed
-
-  workflow_dispatch:
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
