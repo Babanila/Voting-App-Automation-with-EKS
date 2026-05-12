@@ -2,11 +2,15 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: voting-app-ingress
+  namespace: ${NAMESPACE}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   ingressClassName: nginx
   rules:
     # Route 1: Vote
-    - host: vote.babs.ironlabs.online
+    - host: "vote.${NAMESPACE}.${DNS_EXTENSION_PATH}"
       http:
         paths:
           - path: /
@@ -16,7 +20,7 @@ spec:
                 name: vote
                 port:
                   number: 80
-    - host: result.babs.ironlabs.online
+    - host: "result.${NAMESPACE}.${DNS_EXTENSION_PATH}"
       http:
         paths:
           - path: /

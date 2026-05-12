@@ -32,6 +32,7 @@ env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
   NAMESPACE: ${{ vars.K8S_NAMESPACE }}-${{ github.event.inputs.environment || 'dev' }}
+  DNS_EXTENSION_PATH: ${{ vars.DNS_EXTENSION_PATH }}
   IMAGE_TAG: ${{ github.sha }}
 
   ENVIRONMENT: ${{ github.event.inputs.environment || 'dev' }}
