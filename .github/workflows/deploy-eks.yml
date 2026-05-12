@@ -83,7 +83,7 @@ jobs:
 
             mkdir -p "$(dirname "$out_file")"
 
-            envsubst '${AWS_REGION} ${EKS_CLUSTER_NAME} ${K8S_NAMESPACE} ${ECR_REGISTRY} ${IMAGE_TAG}' \
+            envsubst '${AWS_REGION} ${EKS_CLUSTER_NAME} ${NAMESPACE} ${ECR_REGISTRY} ${IMAGE_TAG} ${DNS_EXTENSION_PATH}' \
               < "$file" > "$out_file"
           done < <(find infra/k8s -type f \( -name "*.yaml" -o -name "*.yml" \) -print0)
 
