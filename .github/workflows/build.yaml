@@ -1,0 +1,43 @@
+name: Build Docker Images
+
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+
+  push:
+    branches:
+      - main
+      - dev
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  build:
+    name: Build Images
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - vote
+          - result
+          - worker
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/${{ matrix.service }}
+          file: ./services/${{ matrix.service }}/Dockerfile
+          push: false
+          tags: ${{ matrix.service }}:${{ env.IMAGE_TAG }}
